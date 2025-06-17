@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/await-thenable */
 import { Injectable } from '@nestjs/common';
 import { IArticle } from './interface/article.interface';
 import { createArticleDto } from './dto/create-article.dto';
@@ -5,17 +6,32 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Article } from './entities/article.entity';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class ArticleService {
   constructor(
     @InjectRepository(Article)
     private ArticleRepository: Repository<Article>,
+    private CloudinaryService: CloudinaryService,
   ) {}
 
-  async createArticle(createArticleDto: createArticleDto): Promise<Article> {
-    const newArticle = await this.ArticleRepository.save(createArticleDto);
-    return newArticle;
+  async createArticle(
+    userId: string,
+    createArticleDto: createArticleDto,
+    file?: Express.Multer.File,
+  ): Promise<Article> {
+    let image: string | undefined;
+
+    if (file) {
+      image = await this.CloudinaryService.uploadImageStream(file);
+    }
+    const newArticle = await this.ArticleRepository.create({
+      ...createArticleDto,
+      image,
+      userId,
+    });
+    return this.ArticleRepository.save(newArticle);
   }
   async findAllArticle(): Promise<Article[]> {
     return await this.ArticleRepository.find();

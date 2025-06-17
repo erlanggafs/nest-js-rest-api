@@ -9,12 +9,22 @@ import {
   Param,
   Post,
   Put,
+  Request,
+  UnauthorizedException,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { createArticleDto } from './dto/create-article.dto';
 import { findOneParams } from './dto/find-one.param';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { Article } from './entities/article.entity';
+import { AuthGuardCost } from 'src/auth/guard/auth.guard';
+import { RolesGuard } from 'src/auth/guard/role.guard';
+import { Roles } from 'src/auth/decolator/role.decolator';
+import { Role } from 'src/auth/enum/role.enum';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('article')
 export class ArticleController {
@@ -30,9 +40,31 @@ export class ArticleController {
     return await this.findOneOrFail(params.id);
   }
 
+  @UseGuards(AuthGuardCost, RolesGuard)
+  @Roles(Role.ADMIN)
   @Post()
-  async create(@Body() createArticleDto: createArticleDto): Promise<Article> {
-    return await this.articleService.createArticle(createArticleDto);
+  @UseInterceptors(FileInterceptor('image'))
+  async create(
+    @Request() req,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() createArticleDto: createArticleDto,
+  ): Promise<Article> {
+    console.log('🔍 Full req.user:', req.user);
+
+    // Coba berbagai kemungkinan field untuk user ID
+    const userId = req.user?.id || req.user?.sub || req.user?.userId;
+
+    console.log('🔍 User ID yang diambil:', userId);
+
+    if (!userId) {
+      throw new UnauthorizedException('User ID tidak ditemukan dalam token');
+    }
+
+    return await this.articleService.createArticle(
+      userId,
+      createArticleDto,
+      file,
+    );
   }
 
   @Put('/:id')
