@@ -9,6 +9,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Request,
   UnauthorizedException,
   UploadedFile,
@@ -25,14 +26,15 @@ import { RolesGuard } from 'src/auth/guard/role.guard';
 import { Roles } from 'src/auth/decolator/role.decolator';
 import { Role } from 'src/auth/enum/role.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ArticleQueryDto } from './dto/article-query.dto';
 
 @Controller('article')
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
   @Get()
-  async findAll(): Promise<Article[]> {
-    return await this.articleService.findAllArticle();
+  async findAll(@Query() query: ArticleQueryDto) {
+    return await this.articleService.findAllArticle(query);
   }
 
   @Get('/:id')
@@ -49,12 +51,8 @@ export class ArticleController {
     @UploadedFile() file: Express.Multer.File,
     @Body() createArticleDto: createArticleDto,
   ): Promise<Article> {
-    console.log('🔍 Full req.user:', req.user);
-
     // Coba berbagai kemungkinan field untuk user ID
     const userId = req.user?.id || req.user?.sub || req.user?.userId;
-
-    console.log('🔍 User ID yang diambil:', userId);
 
     if (!userId) {
       throw new UnauthorizedException('User ID tidak ditemukan dalam token');
@@ -67,20 +65,31 @@ export class ArticleController {
     );
   }
 
+  @UseGuards(AuthGuardCost, RolesGuard)
+  @Roles(Role.ADMIN)
   @Put('/:id')
   async update(
+    @Request() req,
+    @UploadedFile() file: Express.Multer.File,
     @Param() params: findOneParams,
     @Body() updateArticleDto: UpdateArticleDto,
   ): Promise<Article> {
     const article = await this.findOneOrFail(params.id);
-    return this.articleService.updateArticleByParams(article, updateArticleDto);
+    return this.articleService.updateArticleByParams(
+      req.user.id,
+      article,
+      updateArticleDto,
+      file,
+    );
   }
 
+  @UseGuards(AuthGuardCost, RolesGuard)
+  @Roles(Role.ADMIN)
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param() params: findOneParams): Promise<void> {
+  async delete(@Request() req, @Param() params: findOneParams): Promise<void> {
     const article = await this.findOneOrFail(params.id);
-    await this.articleService.deleteArticleByParams(article);
+    await this.articleService.deleteArticleByParams(req.user.id, article);
   }
 
   private async findOneOrFail(id: string): Promise<Article> {

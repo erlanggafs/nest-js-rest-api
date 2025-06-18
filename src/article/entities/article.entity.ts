@@ -5,10 +5,12 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { ArticleStatus } from '../interface/article.interface';
 import { Category } from '../../category/entities/category.entity';
 import { User } from '../../auth/entities/user.entity';
+import { ArticleTag } from 'src/articletag/entities/articletag.entity';
 
 @Entity()
 export class Article {
@@ -50,6 +52,9 @@ export class Article {
     type: 'uuid',
   })
   userId: string;
+
+  @OneToMany(() => ArticleTag, (articletag) => articletag.article)
+  articleTags: ArticleTag[];
 
   @CreateDateColumn()
   readonly createdAt: Date;
