@@ -5,7 +5,6 @@ import { ArticleModule } from './article/article.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmConfig } from './config/database.config';
-// import { typeOrmConfig } from './config/database.config';
 import { CategoryModule } from './category/category.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';

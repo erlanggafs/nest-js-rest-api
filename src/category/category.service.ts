@@ -26,6 +26,36 @@ export class CategoryService {
   async findOne(id: string): Promise<Category | null> {
     return await this.categoryRepository.findOne({
       where: { id: id },
+      relations: [
+        'articles',
+        'articles.user',
+        'articles.articleTags',
+        'articles.articleTags.tag',
+      ],
+      select: {
+        id: true,
+        name: true,
+        articles: {
+          id: true,
+          title: true,
+          content: true,
+          status: true,
+          image: true,
+          createdAt: true,
+          updatedAt: true,
+          user: {
+            name: true,
+            email: true,
+          },
+          articleTags: {
+            id: true,
+            tag: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
     });
   }
 

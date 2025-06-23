@@ -23,6 +23,43 @@ export class ArticleService {
     private CloudinaryService: CloudinaryService,
   ) {}
 
+  async articleByUser(userId: string, query: ArticleQueryDto) {
+    const {
+      title,
+      page = 1,
+      limit = 3,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = query;
+    //paging and sorting
+    const skip = (page - 1) * limit;
+
+    const qb = this.ArticleRepository.createQueryBuilder(
+      'article',
+    ).innerJoinAndSelect('article.category', 'category');
+
+    //search by title
+    if (title) {
+      qb.andWhere('article.title LIKE :title', { title: `%${title}%` });
+    }
+
+    const [data, total] = await qb
+      // .where('article.userId = :userId', { userId })
+      .orderBy(`article.${sortBy}`, sortOrder.toUpperCase() as 'ASC' | 'DESC')
+      .skip(skip)
+      .take(limit)
+      .where({ userId })
+      .select(['article', 'category.name'])
+      .getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      lastPage: Math.ceil(total / limit),
+    };
+  }
+
   async createArticle(
     userId: string,
     createArticleDto: createArticleDto,
