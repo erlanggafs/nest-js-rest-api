@@ -15,7 +15,7 @@ config(); // Load environment variables from .env file
     TypeOrmModule.forFeature([User, Profile]),
     JwtModule.register({
       secret: jwtConstants.secret, // Secret key for signing JWTs, should be stored in .env file
-      signOptions: { expiresIn: '7d' }, // Token expiration time
+      signOptions: { expiresIn: '1d' }, // Token expiration time
     }),
   ],
   controllers: [AuthController],

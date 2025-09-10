@@ -52,7 +52,7 @@ export class AuthService {
     return { message: 'User registered successfully' };
   }
 
-  async loginUser(loginDto: LoginDto): Promise<{ access_token: string }> {
+  async loginUser(loginDto: LoginDto) {
     const user = await this.userRepository.findOne({
       where: { email: loginDto.email },
     });
@@ -70,8 +70,21 @@ export class AuthService {
       email: user.email,
       role: user.role,
     };
+
+    const token = await this.jwtService.signAsync(payload);
+
     return {
-      access_token: await this.jwtService.signAsync(payload),
+      status: 'success',
+      message: 'Login berhasil',
+      data: {
+        accessToken: token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      },
     };
   }
 
