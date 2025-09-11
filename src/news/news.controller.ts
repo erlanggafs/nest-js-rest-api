@@ -1,0 +1,118 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+  Put,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { NewsService } from './news.service';
+import { CreateNewsDto } from './dto/create-news.dto';
+import { UpdateNewsDto } from './dto/update-news.dto';
+
+import { News } from './entities/news.entity';
+import { AuthGuardCost } from 'src/auth/guard/auth.guard';
+import { RolesGuard } from 'src/auth/guard/role.guard';
+import { Roles } from 'src/auth/decolator/role.decolator';
+import { Role } from 'src/auth/enum/role.enum';
+import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
+
+@Controller('news')
+export class NewsController {
+  constructor(private readonly newsService: NewsService) {}
+
+  @Get()
+  async findAll() {
+    const data = await this.newsService.findAll();
+    return {
+      status: 'success',
+      message: 'Daftar news berhasil diambil',
+      data,
+    };
+  }
+
+  @Get('/:id')
+  async findOne(@Param('id') id: string) {
+    const data = await this.findOneOrFail(id);
+    return {
+      status: 'success',
+      message: 'Detail news berhasil diambil',
+      data,
+    };
+  }
+
+  @UseGuards(AuthGuardCost, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ description: 'Create News', type: CreateNewsDto })
+  @Post()
+  @UseInterceptors(FileInterceptor('image'))
+  async create(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() createNewsDto: CreateNewsDto,
+  ) {
+    const data = await this.newsService.create({
+      ...createNewsDto,
+      image: file?.path,
+    });
+
+    return {
+      status: 'success',
+      message: 'News berhasil dibuat',
+      data,
+    };
+  }
+
+  @UseGuards(AuthGuardCost, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ description: 'Update News', type: UpdateNewsDto })
+  @Put('/:id')
+  @UseInterceptors(FileInterceptor('image'))
+  async update(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() updateNewsDto: UpdateNewsDto,
+  ) {
+    const data = await this.newsService.update(id, {
+      ...updateNewsDto,
+      image: file?.path,
+    });
+
+    return {
+      status: 'success',
+      message: 'News berhasil diupdate',
+      data,
+    };
+  }
+
+  @UseGuards(AuthGuardCost, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth()
+  @Delete('/:id')
+  async delete(@Param('id') id: string) {
+    await this.newsService.remove(id);
+
+    return {
+      status: 'success',
+      message: 'News berhasil dihapus',
+      data: null,
+    };
+  }
+
+  private async findOneOrFail(id: string): Promise<News> {
+    const news = await this.newsService.findOne(id);
+    if (!news) {
+      throw new NotFoundException(`News dengan ID ${id} tidak ditemukan`);
+    }
+    return news;
+  }
+}
