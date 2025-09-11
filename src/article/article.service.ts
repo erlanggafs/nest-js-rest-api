@@ -68,7 +68,7 @@ export class ArticleService {
     let image: string | undefined;
 
     if (file) {
-      image = await this.CloudinaryService.uploadImageStream(file);
+      image = await this.CloudinaryService.uploadImageStream(file, 'articles');
     }
     const newArticle = await this.ArticleRepository.create({
       ...createArticleDto,

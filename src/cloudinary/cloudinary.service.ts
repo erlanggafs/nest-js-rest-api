@@ -14,11 +14,14 @@ cloudinary.config({
 
 @Injectable()
 export class CloudinaryService {
-  async uploadImageStream(file: Express.Multer.File): Promise<string> {
+  async uploadImageStream(
+    file: Express.Multer.File,
+    folder = 'assets',
+  ): Promise<string> {
     return new Promise((resolve, reject) => {
       const uploadSteam = cloudinary.uploader.upload_stream(
         {
-          folder: 'articles',
+          folder: folder,
           allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
         },
         (error, result: UploadApiResponse) => {

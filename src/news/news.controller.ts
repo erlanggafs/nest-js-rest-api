@@ -7,13 +7,14 @@ import {
   Param,
   Post,
   Put,
+  Request,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { NewsService } from './news.service';
-import { CreateNewsDto } from './dto/create-news.dto';
+import { createNewsDto } from './dto/create-news.dto';
 import { UpdateNewsDto } from './dto/update-news.dto';
 
 import { News } from './entities/news.entity';
@@ -51,16 +52,17 @@ export class NewsController {
   @Roles(Role.ADMIN)
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ description: 'Create News', type: CreateNewsDto })
+  @ApiBody({ description: 'Create News', type: createNewsDto })
   @Post()
   @UseInterceptors(FileInterceptor('image'))
   async create(
+    @Request() req,
     @UploadedFile() file: Express.Multer.File,
-    @Body() createNewsDto: CreateNewsDto,
+    @Body() createNewsDto: createNewsDto,
   ) {
-    const data = await this.newsService.create({
-      ...createNewsDto,
-      image: file?.path,
+    const data = await this.newsService.createNews({
+      createNewsDto,
+      file,
     });
 
     return {
@@ -83,8 +85,8 @@ export class NewsController {
     @Body() updateNewsDto: UpdateNewsDto,
   ) {
     const data = await this.newsService.update(id, {
-      ...updateNewsDto,
-      image: file?.path,
+      news: updateNewsDto,
+      file,
     });
 
     return {
