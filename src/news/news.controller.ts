@@ -24,10 +24,13 @@ import { Roles } from 'src/auth/decolator/role.decolator';
 import { Role } from 'src/auth/enum/role.enum';
 import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
 
+@UseGuards(AuthGuardCost, RolesGuard) // ✅ Semua endpoint wajib token & role
+@ApiBearerAuth()
 @Controller('news')
 export class NewsController {
   constructor(private readonly newsService: NewsService) {}
 
+  @Roles(Role.ADMIN, Role.USER)
   @Get()
   async findAll() {
     const data = await this.newsService.findAll();
@@ -38,6 +41,7 @@ export class NewsController {
     };
   }
 
+  @Roles(Role.ADMIN, Role.USER)
   @Get('/:id')
   async findOne(@Param('id') id: string) {
     const data = await this.findOneOrFail(id);
@@ -48,9 +52,7 @@ export class NewsController {
     };
   }
 
-  @UseGuards(AuthGuardCost, RolesGuard)
   @Roles(Role.ADMIN)
-  @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
   @ApiBody({ description: 'Create News', type: createNewsDto })
   @Post()
@@ -74,7 +76,6 @@ export class NewsController {
 
   @UseGuards(AuthGuardCost, RolesGuard)
   @Roles(Role.ADMIN)
-  @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
   @ApiBody({ description: 'Update News', type: UpdateNewsDto })
   @Put('/:id')
@@ -96,9 +97,7 @@ export class NewsController {
     };
   }
 
-  @UseGuards(AuthGuardCost, RolesGuard)
   @Roles(Role.ADMIN)
-  @ApiBearerAuth()
   @Delete('/:id')
   async delete(@Param('id') id: string) {
     await this.newsService.remove(id);

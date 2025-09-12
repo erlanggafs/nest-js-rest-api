@@ -20,12 +20,14 @@ import { AuthGuardCost } from 'src/auth/guard/auth.guard';
 import { RolesGuard } from 'src/auth/guard/role.guard';
 import { Roles } from 'src/auth/decolator/role.decolator';
 import { Role } from 'src/auth/enum/role.enum';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@UseGuards(AuthGuardCost, RolesGuard) // ✅ Semua endpoint wajib token & role
+@ApiBearerAuth()
 @Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
-  @UseGuards(AuthGuardCost, RolesGuard)
   @Roles(Role.ADMIN)
   @Post()
   async create(
@@ -45,7 +47,6 @@ export class CategoryController {
     return category;
   }
 
-  @UseGuards(AuthGuardCost, RolesGuard)
   @Roles(Role.ADMIN)
   @Put(':id')
   async update(
@@ -56,7 +57,6 @@ export class CategoryController {
     return this.categoryService.update(category, updateCategoryDto);
   }
 
-  @UseGuards(AuthGuardCost, RolesGuard)
   @Roles(Role.ADMIN)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)

@@ -17,33 +17,25 @@ export class ProfileService {
 
   async updateOrCreateProfile(
     userId: string,
-    createorUpdateProfileDto: createOrUpdateProfileDto,
+    createOrUpdateProfileDto: createOrUpdateProfileDto,
   ): Promise<{ message: string }> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
       relations: ['profile'],
     });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    if (!user) throw new NotFoundException('User not found');
 
     if (user.profile) {
-      //update profile
-      Object.assign(user.profile, createorUpdateProfileDto);
+      Object.assign(user.profile, createOrUpdateProfileDto);
       await this.profileRepository.save(user.profile);
-      return {
-        message: 'Update Profile Succesfully',
-      };
+      return { message: 'Update Profile Successfully' };
     } else {
-      //Tambah Profile
       const newProfile = this.profileRepository.create(
-        createorUpdateProfileDto,
+        createOrUpdateProfileDto,
       );
       newProfile.user = user;
       await this.profileRepository.save(newProfile);
-      return {
-        message: 'Create profile succes',
-      };
+      return { message: 'Create profile successfully' };
     }
   }
 
@@ -59,6 +51,13 @@ export class ProfileService {
         profile: {
           age: true,
           bio: true,
+          image: true,
+          kelas: true,
+          jurusan: true,
+          tahunLulus: true,
+          status: true,
+          followersCount: true,
+          followingCount: true,
         },
       },
     });

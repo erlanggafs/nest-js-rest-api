@@ -27,6 +27,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ArticleQueryDto } from './dto/article-query.dto';
 import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
 
+@UseGuards(AuthGuardCost, RolesGuard)
+@ApiBearerAuth()
 @Controller('article')
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
@@ -41,7 +43,6 @@ export class ArticleController {
     };
   }
 
-  @UseGuards(AuthGuardCost, RolesGuard)
   @Roles(Role.ADMIN)
   @Get('/user')
   async findArticleUser(@Request() req, @Query() query: ArticleQueryDto) {
@@ -49,6 +50,7 @@ export class ArticleController {
     return article;
   }
 
+  @Roles(Role.ADMIN, Role.USER)
   @Get('/:id')
   async findOne(@Param() params: findOneParams) {
     const data = await this.findOneOrFail(params.id);
@@ -59,9 +61,7 @@ export class ArticleController {
     };
   }
 
-  @UseGuards(AuthGuardCost, RolesGuard)
   @Roles(Role.ADMIN)
-  @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
   @ApiBody({ description: 'Create Article', type: createArticleDto })
   @Post()
@@ -87,9 +87,7 @@ export class ArticleController {
     };
   }
 
-  @UseGuards(AuthGuardCost, RolesGuard)
   @Roles(Role.ADMIN)
-  @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
   @ApiBody({ description: 'Update Article', type: UpdateArticleDto })
   @Put('/:id')
@@ -113,9 +111,7 @@ export class ArticleController {
     };
   }
 
-  @UseGuards(AuthGuardCost, RolesGuard)
   @Roles(Role.ADMIN)
-  @ApiBearerAuth()
   @Delete('/:id')
   async delete(@Request() req, @Param() params: findOneParams) {
     const article = await this.findOneOrFail(params.id);

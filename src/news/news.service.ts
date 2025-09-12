@@ -62,7 +62,6 @@ export class NewsService {
       // Upload image baru ke Cloudinary
       image = await this.CloudinaryService.uploadImageStream(file, 'news');
 
-      // Opsional: hapus image lama dari Cloudinary
       // if (existingNews.image) {
       //   await this.CloudinaryService.deleteImage(existingNews.image);
       // }
